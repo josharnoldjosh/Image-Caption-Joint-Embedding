@@ -12,12 +12,15 @@ class PairwiseRankingLoss(nn.Module):
 		scores = torch.mm(image, sentence)
 		diagonal = scores.diag()
 
-		sentence_cost = torch.max(Variable(torch.zeros(scores.size()[0], scores.size()[1])), (self.margin-diagonal).expand_as(scores)+scores)		
-		image_cost = torch.max(Variable(torch.zeros(scores.size()[0], scores.size()[1])), (self.margin-diagonal).expand_as(scores).transpose(1, 0)+scores)
+		sentence_cost = None		
+		image_cost = None
 
 		if torch.cuda.is_available():
 			sentence_cost = torch.max(Variable(torch.zeros(scores.size()[0], scores.size()[1])).cuda(), (self.margin-diagonal).expand_as(scores)+scores)		
 			image_cost = torch.max(Variable(torch.zeros(scores.size()[0], scores.size()[1])).cuda(), (self.margin-diagonal).expand_as(scores).transpose(1, 0)+scores)
+		else:
+			sentence_cost = torch.max(Variable(torch.zeros(scores.size()[0], scores.size()[1])), (self.margin-diagonal).expand_as(scores)+scores)		
+			image_cost = torch.max(Variable(torch.zeros(scores.size()[0], scores.size()[1])), (self.margin-diagonal).expand_as(scores).transpose(1, 0)+scores)
 
 		for i in range(scores.size()[0]):
 			sentence_cost[i, i] = 0

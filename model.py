@@ -5,7 +5,6 @@ import numpy
 import evaluate
 from collections import defaultdict
 import time
-import deepdish as dd
 
 class Model(torch.nn.Module):
 	def __init__(self):
@@ -20,6 +19,11 @@ class Model(torch.nn.Module):
 
 		# Image - Assume image feature is already extracted from pre-trained CNN
 		self.linear = torch.nn.Linear(config['image_dimension'], config['model_dimension'])
+
+		if torch.cuda.is_available():
+			self.embedding.cuda()
+			self.lstm.cuda()
+			self.linear.cuda()
 
 	def forward(self, sentence, image):		
 		return self.forward_caption(sentence), self.forward_image(image)

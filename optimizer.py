@@ -7,8 +7,8 @@ class Optimizer:
 		self.optimizer = torch.optim.Adam(self.params, learning_rate)
 		
 	def backprop(self, cost, grad_clip=2.0):
-		print("	* Cost:", cost.data.cpu().numpy()[0])
+		print("	* Cost:", cost.data.cpu().numpy())
 		cost.backward()
-		torch.nn.utils.clip_grad_norm(self.params, grad_clip)
+		torch.nn.utils.clip_grad_norm_(self.params, grad_clip)
 		self.optimizer.step()
 
