@@ -4,15 +4,13 @@ from model import Model
 from loss import PairwiseRankingLoss as Loss
 from optimizer import Optimizer
 
-import torch
-
 if __name__ == "__main__":
 
 	# Load data
-	data = Data(batch_size=config["batch_size"])
+	data = Data()
 
 	# Load model
-	model = Model(config)
+	model = Model()
 
 	# Model loss function
 	loss = Loss()
@@ -20,23 +18,21 @@ if __name__ == "__main__":
 	# Optimizer 
 	optimizer = Optimizer(model)
 
-	for epoch in range(config["num_epochs"]):
+	for epoch in range(config["num_epochs"]):		
+		print("\nStarting epoch", epoch+1)		
 
-		# Each epoch
-		print("Starting epoch", epoch+1)		
-
-		for caption_sequence, image_feature in data:
+		for caption, image_feature in data:
 			
 			# Pass data through model
-			caption_sequence, image_feature = model(caption_sequence, image_feature)
+			caption, image_feature = model(caption, image_feature)
 
 			# Compute loss
-			cost = loss(caption_sequence, image_feature)
+			cost = loss(caption, image_feature)			
 
 			# Optimize loss and perform back-propagation
 			optimizer.backprop(cost)
 
-			# Computing results 
-			
+			# Evaluate results & save best model	
+			model.evaluate(data)
 
 	print("Script done.")

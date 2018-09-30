@@ -6,7 +6,7 @@ import torch
 from torch.autograd import Variable
 
 class Data:
-    def __init__(self, batch_size=128):
+    def __init__(self):
         # Load captions as array of strings corresponding to an array of image feature vectors
         self.load_dataset()        
 
@@ -14,7 +14,7 @@ class Data:
         self.create_dictionaries()
 
         # Reset counter & batch size
-        self.batch_size = batch_size        
+        self.batch_size = config["batch_size"]        
         self.batch_number = 0   
 
     def __iter__(self):
@@ -90,7 +90,7 @@ class Data:
         # Convert a caption to an array of indexes of words from the dictionary, self.word_to_index  
         sequences = []        
         for idx, caption in enumerate(captions):
-            sequences.append([self.word_to_index[word] if self.word_to_index[word] < config["num_words"] else 1 for word in caption.split()])
+            sequences.append([self.word_to_index[word] if word in self.index_to_word and self.word_to_index[word] < config["num_words"] else 1 for word in caption.split()])            
 
         sequence_lengths = [len(seq) for seq in sequences] # the lengths of all sequences in an array
         processed_captions = numpy.zeros((max(sequence_lengths)+1, len(sequences))).astype('int64') # create matrix w/ biggest length of sequence by length of all sequences
@@ -99,5 +99,8 @@ class Data:
 
         # Just convert image features to numpy array
         processed_image_features = numpy.asarray(image_features, dtype=numpy.float32)
+
+        if torch.cuda.is_available():
+            return Variable(torch.from_numpy(processed_captions)).cuda(), Variable(torch.from_numpy(processed_image_features)).cuda()
 
         return Variable(torch.from_numpy(processed_captions)), Variable(torch.from_numpy(processed_image_features))
