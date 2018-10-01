@@ -4,5 +4,6 @@ config = {
 	"num_words":10000, # max words to encode
 	"word_dimension":300, # ?
 	"image_dimension":4096, # input image dimension
-	"model_dimension":1024 # the layer size
+	"model_dimension":1024, # the layer size,
+	"learning_rate":0.0002
 }

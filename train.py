@@ -21,15 +21,14 @@ if __name__ == "__main__":
 	for epoch in range(config["num_epochs"]):		
 		print("\nStarting epoch", epoch+1)		
 
-		for caption, image_feature in data:
-			
+		for caption, image_feature in data:					
 			# Pass data through model
 			caption, image_feature = model(caption, image_feature)
 
 			# Compute loss
 			cost = loss(caption, image_feature)			
 
-			# Optimize loss and perform back-propagation
+			# Zero gradient, Optimize loss, and perform back-propagation
 			optimizer.backprop(cost)
 
 			# Evaluate results & save best model	
