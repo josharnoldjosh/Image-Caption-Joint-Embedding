@@ -37,7 +37,7 @@ def image_to_text(captions, images, npts=None):
     r10 = 100.0 * len(numpy.where(ranks < 10)[0]) / len(ranks)
     medr = numpy.floor(numpy.median(ranks)) + 1
 
-    print("		* Image to text scores: %.1f, %.1f, %.1f, %.1f" % (r1, r5, r10, medr))
+    print("		* Image to text scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (r1, r5, r10, medr))
     return r1+r5+r10
 
 def text_to_image(captions, images, npts=None):
@@ -66,7 +66,7 @@ def text_to_image(captions, images, npts=None):
     r10 = 100.0 * len(numpy.where(ranks < 10)[0]) / len(ranks)
     medr = numpy.floor(numpy.median(ranks)) + 1
     
-    print("		* Text to image scores: %.1f, %.1f, %.1f, %.1f" % (r1, r5, r10, medr))
+    print("		* Text to image scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (r1, r5, r10, medr))
     return r1+r5+r10
 
  
