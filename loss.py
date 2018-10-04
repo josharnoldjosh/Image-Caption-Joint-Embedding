@@ -1,11 +1,12 @@
 import torch
 from torch import nn
 from torch.autograd import Variable
+from settings import config
 
 class PairwiseRankingLoss(nn.Module):
-	def __init__(self, margin=1.0):
+	def __init__(self):
 		super(PairwiseRankingLoss, self).__init__()
-		self.margin = margin
+		self.margin = config["margin_pairwise_ranking_loss"]
 
 	def forward(self, sentence, image):
 		sentence = sentence.transpose(1, 0)
