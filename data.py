@@ -68,17 +68,22 @@ class Data:
     def create_dictionaries(self):
         """
         Create the dictionaries to go from a word to an index and an index to a words.
-        """
+        """        
         captions = self.train[0] + self.dev[0]
+
         self.word_to_index = {'<eos>':0, 'UNK':1}
         self.index_to_word = {0:'<eos>', 1:'UNK'}
                 
-        for idx, caption in enumerate(captions):  
-            for word in caption.split():          
-                if word not in self.word_to_index:
-                    self.word_to_index[word] = idx + 2 # Because of <eos> & UNK
-                    self.index_to_word[idx+2] = word
 
+        words = set()                
+        for idx, caption in enumerate(captions):  
+            for word in caption.split():  
+                words.add(word.decode("utf-8"))                
+
+        for idx, word in enumerate(words):
+            self.word_to_index[word] = idx + 2
+            self.index_to_word[idx+2] = word
+                
         print("dictionary contains", len(self.word_to_index)-2, "words.")        
         return
 
@@ -90,7 +95,7 @@ class Data:
         # Convert a caption to an array of indexes of words from the dictionary, self.word_to_index  
         sequences = []        
         for idx, caption in enumerate(captions):
-            sequences.append([self.word_to_index[word] if word in self.index_to_word and self.word_to_index[word] < config["num_words"] else 1 for word in caption.split()])            
+            sequences.append([self.word_to_index[word] if word in self.index_to_word else 1 for word in caption.split()])            
 
         sequence_lengths = [len(seq) for seq in sequences] # the lengths of all sequences in an array
         processed_captions = numpy.zeros((max(sequence_lengths)+1, len(sequences))).astype('int64') # create matrix w/ biggest length of sequence by length of all sequences

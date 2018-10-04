@@ -10,7 +10,7 @@ if __name__ == "__main__":
 	data = Data()
 
 	# Load model
-	model = Model()
+	model = Model(data)
 
 	# Model loss function
 	loss = Loss()
@@ -20,8 +20,13 @@ if __name__ == "__main__":
 
 	for epoch in range(config["num_epochs"]):		
 		print("\nStarting epoch", epoch+1)		
+		validation_freq = config["validation_freq"]
+		validation_count = 0
+				
+		for caption, image_feature in data:		
 
-		for caption, image_feature in data:					
+			validation_count += 1			
+
 			# Pass data through model
 			caption, image_feature = model(caption, image_feature)
 
@@ -31,7 +36,9 @@ if __name__ == "__main__":
 			# Zero gradient, Optimize loss, and perform back-propagation
 			optimizer.backprop(cost)
 
-			# Evaluate results & save best model	
-			model.evaluate(data)
+			# Evaluate results & save best model
+			if validation_count % validation_freq == 0:	
+				print("	* Validating...")
+				model.evaluate(data)			
 
 	print("Script done.")
