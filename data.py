@@ -34,7 +34,7 @@ class Data:
             self.batch_number += 1 # Increment the batch number so next-time we will return the next batch
             captions = self.train[0][lower_idx:upper_idx] # Extract caption batch
             image_features = self.train[1][lower_idx:upper_idx] # Extract image feature batch
-            captions, image_features = self.preprocess_data(captions, image_features) # Preprocess our data, converting raw text to embedded numbers etc            
+            captions, image_features = self.preprocess_data(captions, image_features) # Preprocess our data, converting raw text to embedded numbers etc                        
             return captions, image_features
             
         self.batch_number = 0
@@ -78,24 +78,23 @@ class Data:
         words = set()                
         for idx, caption in enumerate(captions):  
             for word in caption.split():  
-                words.add(word.decode("utf-8"))                
+                words.add(word)                
 
         for idx, word in enumerate(words):
             self.word_to_index[word] = idx + 2
-            self.index_to_word[idx+2] = word
-                
+            self.index_to_word[idx+2] = word              
+
         print("dictionary contains", len(self.word_to_index)-2, "words.")        
         return
 
-    def preprocess_data(self, captions, image_features):
+    def preprocess_data(self, captions, image_features, n_words=10000):
         """
         Convert raw data to go into the model.
-        """       
-
+        """               
         # Convert a caption to an array of indexes of words from the dictionary, self.word_to_index  
         sequences = []        
         for idx, caption in enumerate(captions):
-            sequences.append([self.word_to_index[word] if word in self.index_to_word else 1 for word in caption.split()])            
+            sequences.append([self.word_to_index[word] if word in self.word_to_index.keys() else 1 for word in caption.split()])                    
 
         sequence_lengths = [len(seq) for seq in sequences] # the lengths of all sequences in an array
         processed_captions = numpy.zeros((max(sequence_lengths)+1, len(sequences))).astype('int64') # create matrix w/ biggest length of sequence by length of all sequences
@@ -107,5 +106,5 @@ class Data:
 
         if torch.cuda.is_available():
             return Variable(torch.from_numpy(processed_captions)).cuda(), Variable(torch.from_numpy(processed_image_features)).cuda()
-
+        
         return Variable(torch.from_numpy(processed_captions)), Variable(torch.from_numpy(processed_image_features))
