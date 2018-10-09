@@ -24,10 +24,10 @@ class Model(torch.nn.Module):
 		self.linear = torch.nn.Linear(config['image_dimension'], config['model_dimension'])
 
 		# Initialize weights for linear layer
-		torch.nn.init.xavier_uniform(self.linear.weight)
+		torch.nn.init.xavier_uniform_(self.linear.weight)
 		self.linear.bias.data.fill_(0)		
 
-		if torch.cuda.is_available():
+		if torch.cuda.is_available() and config["cuda"] == True:
 			self.embedding.cuda()
 			self.lstm.cuda()
 			self.linear.cuda()

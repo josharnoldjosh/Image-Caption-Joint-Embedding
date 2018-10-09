@@ -71,9 +71,9 @@ class Data:
         """        
         captions = self.train[0] + self.dev[0]
 
+        # TODO: Add beginning and end of setence tokens thats not zero
         self.word_to_index = {'<eos>':0, 'UNK':1}
         self.index_to_word = {0:'<eos>', 1:'UNK'}
-                
 
         words = set()                
         for idx, caption in enumerate(captions):  
@@ -104,7 +104,7 @@ class Data:
         # Just convert image features to numpy array
         processed_image_features = numpy.asarray(image_features, dtype=numpy.float32)
 
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and config["cuda"] == True:
             return Variable(torch.from_numpy(processed_captions)).cuda(), Variable(torch.from_numpy(processed_image_features)).cuda()
         
         return Variable(torch.from_numpy(processed_captions)), Variable(torch.from_numpy(processed_image_features))

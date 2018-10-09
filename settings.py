@@ -1,12 +1,13 @@
 config = {
-	"num_epochs":15,
+	"num_epochs":20,
 	"batch_size":128,
 	"word_dimension":1000, # The dimensionality of word embeddings
-	"image_dimension":512, # input image dimension
+	"image_dimension":512, # input image dimension : 4096 for VGG
 	"model_dimension":1000, # The dimension of the embedding space,
-	"learning_rate":0.001,
-	"validation_freq":50,
-	"display_freq":1,
+	"learning_rate":0.01,
+	"validation_freq":10000,
+	"display_freq":1, # how often to display loss : 1 = every batch, 2 = every second batch etc...
 	"margin_pairwise_ranking_loss":0.2, # Should be between zero and 1,
-	"dataset":"deepfashion"
+	"dataset":"deepfashion",
+	"cuda":False # enable cuda
 }

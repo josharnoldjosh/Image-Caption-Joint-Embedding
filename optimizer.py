@@ -15,5 +15,5 @@ class Optimizer:
 		self.display_count += 1
 		self.optimizer.zero_grad() # Reset gradient
 		cost.backward() # Back propagate		
-		torch.nn.utils.clip_grad_norm(self.params, grad_clip)
+		torch.nn.utils.clip_grad_norm_(self.params, grad_clip)
 		self.optimizer.step()
