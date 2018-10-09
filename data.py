@@ -8,7 +8,7 @@ from torch.autograd import Variable
 class Data:
     def __init__(self):
         # Load captions as array of strings corresponding to an array of image feature vectors
-        self.load_dataset()        
+        self.load_dataset(name=config["dataset"])        
 
         # Create vocab dictionaries
         self.create_dictionaries()
