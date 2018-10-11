@@ -63,6 +63,13 @@ class Data:
 
         self.train = (train_caps, train_ims)
         self.dev = (dev_caps, dev_ims)
+
+        if len(self.train[0]) != len(self.train[1]):
+            print("Captions do not match image features one to one for training set!")
+
+        if len(self.dev[0]) != len(self.dev[1]):
+            print("Captions do not match image features one to one for dev set!")
+
         return
 
     def create_dictionaries(self):

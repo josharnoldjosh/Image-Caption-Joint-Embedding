@@ -8,8 +8,8 @@ class PairwiseRankingLoss(nn.Module):
 		super(PairwiseRankingLoss, self).__init__()
 		self.margin = config["margin_pairwise_ranking_loss"]
 
-	def forward(self, sentence, image):		
-		margin = self.margin
+	def forward(self, sentence, image):				
+		margin = self.margin		
 		scores = torch.mm(image, sentence.transpose(1, 0))
 		diagonal = scores.diag()
 
