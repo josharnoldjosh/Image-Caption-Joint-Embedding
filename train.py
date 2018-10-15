@@ -19,7 +19,7 @@ if __name__ == "__main__":
 	optimizer = Optimizer(model)
 
 	for epoch in range(config["num_epochs"]):		
-		print("\nStarting epoch", epoch+1)		
+		print("\nStarting epoch", epoch+1)				
 				
 		for caption, image_feature in data:					
 
@@ -32,8 +32,7 @@ if __name__ == "__main__":
 			# Zero gradient, Optimize loss, and perform back-propagation
 			optimizer.backprop(cost)
 
-		# Evaluate results & save best model			
-		print("	* Validating...")
+		# Evaluate results & save best model					
 		model.evaluate(data)			
 
 	print("Script done.")

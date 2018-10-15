@@ -15,7 +15,8 @@ class Data:
 
         # Reset counter & batch size
         self.batch_size = config["batch_size"]        
-        self.batch_number = 0   
+        self.batch_number = 0
+        self.use_dev = False
 
     def __iter__(self):
         return self
@@ -25,15 +26,19 @@ class Data:
         Return a batch of data ready to go into the model
         """
 
+        data_set = self.train
+        if self.use_dev:
+        	data_set = self.dev        	
+
         # Upper and lower indexes for the batches
         upper_idx = (self.batch_number+1)*self.batch_size
         lower_idx = self.batch_number*self.batch_size
 
         # If our lower index is in the bounds of our data, we can return a new batch
-        if lower_idx < len(self.train[0]):            
+        if lower_idx < len(data_set[0]):            
             self.batch_number += 1 # Increment the batch number so next-time we will return the next batch
-            captions = self.train[0][lower_idx:upper_idx] # Extract caption batch
-            image_features = self.train[1][lower_idx:upper_idx] # Extract image feature batch
+            captions = data_set[0][lower_idx:upper_idx] # Extract caption batch
+            image_features = data_set[1][lower_idx:upper_idx] # Extract image feature batch
             captions, image_features = self.preprocess_data(captions, image_features) # Preprocess our data, converting raw text to embedded numbers etc                        
             return captions, image_features
             

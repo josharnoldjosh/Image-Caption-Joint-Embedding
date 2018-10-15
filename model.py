@@ -24,7 +24,7 @@ class Model(torch.nn.Module):
 		self.linear = torch.nn.Linear(config['image_dimension'], config['model_dimension'])
 
 		# Initialize weights for linear layer
-		torch.nn.init.xavier_uniform_(self.linear.weight)
+		torch.nn.init.xavier_uniform_(self.linear.weight)		
 		self.linear.bias.data.fill_(0)		
 
 		if torch.cuda.is_available() and config["cuda"] == True:
@@ -58,11 +58,35 @@ class Model(torch.nn.Module):
 
 		return norm_sentence_embedding
 
-	def encode(self, data):			
-		captions, images = data.preprocess_data(data.dev[0], data.dev[1])
-		return self.forward(captions, images)
+	# COMBINE X AND Y TO TEST ALL OF DEV DATA ISNTEAD OF JUST ONE BATCH
+	def encode(self, data):
+		data.use_dev = True
+		old_batch = data.batch_number
+		data.batch_number = 0
+		captions = None
+		images = None
+		for caption, image_feature in data:				
+			x, y = self.forward(caption, image_feature)		
+			captions = x
+			images = y	
+			# if captions is None:
+			# 	captions = x				
+			# else:
+			# 	captions = torch.cat((captions, x), 0) 
+
+			# if images is None:
+			# 	images = y				
+			# else:
+			# 	images = torch.cat((images, y), 0)
+
+		print("	* encoded data")
+		data.use_dev = False		
+		data.batch_number = old_batch
+					
+		return captions, images
 
 	def evaluate(self, data):
+		print("	* Validating...")
 		r_time = time.time()
 		encoded_captions, encoded_images = self.encode(data)
 		score_1 = evaluate.image_to_text(encoded_captions, encoded_images)
