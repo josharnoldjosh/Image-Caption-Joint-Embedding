@@ -16,7 +16,19 @@ class Data:
         # Reset counter & batch size
         self.batch_size = config["batch_size"]        
         self.batch_number = 0
+        self.previous_batch_number = 0
         self.use_dev = False
+        self.dev_mode = False
+
+    def set_dev_mode(self, mode):
+        if mode:
+            self.use_dev = True
+            self.previous_batch_number = self.batch_number
+            self.batch_number = 0
+        else:
+            self.batch_number = self.previous_batch_number
+            self.use_dev = False
+        return
 
     def __iter__(self):
         return self

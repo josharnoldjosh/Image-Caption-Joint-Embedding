@@ -1,5 +1,5 @@
 config = {
-	"num_epochs":15,
+	"num_epochs":2,
 	"batch_size":128,
 	"word_dimension":1000, # The dimensionality of word embeddings
 	"image_dimension":4096, # input image dimension : 4096 for VGG

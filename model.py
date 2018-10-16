@@ -58,46 +58,25 @@ class Model(torch.nn.Module):
 
 		return norm_sentence_embedding
 
-	# COMBINE X AND Y TO TEST ALL OF DEV DATA ISNTEAD OF JUST ONE BATCH
-	def encode(self, data):
-		data.use_dev = True
-		old_batch = data.batch_number
-		data.batch_number = 0
-		captions = None
-		images = None
+	def evaluate(self, data, verbose=False):
+		print("	* Validating...")			
+		data.set_dev_mode(True)
+		score = 0
 		for caption, image_feature in data:				
-			x, y = self.forward(caption, image_feature)		
-			captions = x
-			images = y	
-			# if captions is None:
-			# 	captions = x				
-			# else:
-			# 	captions = torch.cat((captions, x), 0) 
-
-			# if images is None:
-			# 	images = y				
-			# else:
-			# 	images = torch.cat((images, y), 0)
-
-		print("	* encoded data")
-		data.use_dev = False		
-		data.batch_number = old_batch
-					
-		return captions, images
-
-	def evaluate(self, data):
-		print("	* Validating...")
-		r_time = time.time()
-		encoded_captions, encoded_images = self.encode(data)
-		score_1 = evaluate.image_to_text(encoded_captions, encoded_images)
-		score_2 = evaluate.text_to_image(encoded_captions, encoded_images)		
-		print("		* Recall@K in %.1fs" % float(time.time()-r_time))
-		self.save(score_1+score_2)		
+			x, y = self.forward(caption, image_feature)
+			score_1 = evaluate.image_to_text(x, y, verbose=verbose)
+			score_2 = evaluate.text_to_image(x, y, verbose=verbose)	
+			score += (score_1 + score_2)			
+		
+		data.set_dev_mode(False)
+		print("	* Scored %.2f" % score)		
+		self.save(score)
+		return
 
 	def save(self, score):
 		if score > self.score:
 			self.score = score
-			print('		* Saving model...')			
+			print('	* Saving model...')			
 			torch.save(self.state_dict(), 'best.pkl')
-			print('		* Done!')
+			print('	* Done!')
 		return

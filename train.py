@@ -17,7 +17,7 @@ if __name__ == "__main__":
 	
 	# Optimizer 
 	optimizer = Optimizer(model)
-
+	
 	for epoch in range(config["num_epochs"]):		
 		print("\nStarting epoch", epoch+1)				
 				
@@ -33,6 +33,10 @@ if __name__ == "__main__":
 			optimizer.backprop(cost)
 
 		# Evaluate results & save best model					
-		model.evaluate(data)			
+		model.evaluate(data)
+
+	# Final evaluation			
+	print("\nFinal evaluation:")
+	model.evaluate(data, verbose=True)
 
 	print("Script done.")

@@ -1,7 +1,7 @@
 import numpy
 import torch
 
-def image_to_text(captions, images, npts=None):
+def image_to_text(captions, images, npts=None, verbose=False):
     """
     Images->Text (Image Annotation)
     Images: (5N, K) matrix of images
@@ -37,10 +37,11 @@ def image_to_text(captions, images, npts=None):
     r10 = 100.0 * len(numpy.where(ranks < 10)[0]) / len(ranks)
     medr = numpy.floor(numpy.median(ranks)) + 1
 
-    print("		* Image to text scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (r1, r5, r10, medr))
+    if verbose:
+        print("		* Image to text scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (r1, r5, r10, medr))
     return r1+r5+r10
 
-def text_to_image(captions, images, npts=None):
+def text_to_image(captions, images, npts=None, verbose=False):
     if npts == None:
     	npts = images.size()[0] / 5
     	npts = int(npts)
@@ -66,7 +67,8 @@ def text_to_image(captions, images, npts=None):
     r10 = 100.0 * len(numpy.where(ranks < 10)[0]) / len(ranks)
     medr = numpy.floor(numpy.median(ranks)) + 1
     
-    print("		* Text to image scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (r1, r5, r10, medr))
+    if verbose:
+        print("		* Text to image scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (r1, r5, r10, medr))
     return r1+r5+r10
 
  
