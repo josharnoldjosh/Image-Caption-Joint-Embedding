@@ -15,7 +15,7 @@ Place your data in the `data/` folder. By default, the repository is setup to us
    * You **must** also create an empty folder called `dict` in the project directory.
    * Your project directory should look like so:
   
-    ![file](https://i.imgur.com/VvgsZIy.png)
+![file](https://i.imgur.com/VvgsZIy.png)
     
 ## Train the model
 
