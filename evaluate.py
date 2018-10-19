@@ -39,7 +39,7 @@ def image_to_text(captions, images, npts=None, verbose=False):
 
     if verbose:
         print("		* Image to text scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (r1, r5, r10, medr))
-    return r1+r5+r10
+    return r1+r5+r10, (r1, r5, r10, medr)
 
 def text_to_image(captions, images, npts=None, verbose=False):
     if npts == None:
@@ -69,6 +69,6 @@ def text_to_image(captions, images, npts=None, verbose=False):
     
     if verbose:
         print("		* Text to image scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (r1, r5, r10, medr))
-    return r1+r5+r10
+    return r1+r5+r10, (r1, r5, r10, medr)
 
  

@@ -4,21 +4,32 @@ from collections import OrderedDict
 from settings import config
 import torch
 from torch.autograd import Variable
+import pickle
 
 class Data:
-    def __init__(self):
+    def __init__(self, test=False):
+
         # Load captions as array of strings corresponding to an array of image feature vectors
         self.load_dataset(name=config["dataset"])        
 
-        # Create vocab dictionaries
-        self.create_dictionaries()
+        # Get dictionaries              
+        if test:
+        	self.load_dictionaries()
+        else:
+        	self.create_dictionaries()
 
-        # Reset counter & batch size
+        # Reset
+        self.reset(test)
+
+    def reset(self, test):
+    	# Reset counter & batch size
         self.batch_size = config["batch_size"]        
         self.batch_number = 0
         self.previous_batch_number = 0
         self.use_dev = False
         self.dev_mode = False
+        self.test_mode = test
+        return
 
     def set_dev_mode(self, mode):
         if mode:
@@ -33,6 +44,7 @@ class Data:
     def __iter__(self):
         return self
 
+    # TODO: Iterate over test set if self.test == TRUE
     def __next__(self):        
         """
         Return a batch of data ready to go into the model
@@ -40,7 +52,9 @@ class Data:
 
         data_set = self.train
         if self.use_dev:
-        	data_set = self.dev        	
+        	data_set = self.dev
+        if self.test_mode:
+        	data_set = self.test      	
 
         # Upper and lower indexes for the batches
         upper_idx = (self.batch_number+1)*self.batch_size
@@ -57,29 +71,35 @@ class Data:
         self.batch_number = 0
         raise StopIteration
 
-    def load_dataset(self, name='f8k', path_to_data = 'data/'):
+    # TODO: Load test dataset if test == True
+    def load_dataset(self, name='f8k', path_to_data = 'data/', test=False):
         """
         Load captions and image features
         """
-        print("loading dataset")
+        print("loading dataset")        
 
         loc = path_to_data + name + '/'
 
         # Captions
-        train_caps, dev_caps = [], []
+        train_caps, dev_caps, test_caps = [], [], []
         with open(loc+name+'_train_caps.txt', 'rb') as f:
             for line in f:
                 train_caps.append(line.strip())
         with open(loc+name+'_dev_caps.txt', 'rb') as f:
             for line in f:
                 dev_caps.append(line.strip())
+        with open(loc+name+'_test_caps.txt', 'rb') as f:
+            for line in f:
+                test_caps.append(line.strip())                
 
         # Image features
         train_ims = numpy.load(loc+name+'_train_ims.npy')
-        dev_ims = numpy.load(loc+name+'_dev_ims.npy')        
+        dev_ims = numpy.load(loc+name+'_dev_ims.npy') 
+        test_ims = numpy.load(loc+name+'_test_ims.npy')        
 
         self.train = (train_caps, train_ims)
         self.dev = (dev_caps, dev_ims)
+        self.test = (test_caps, test_ims)
 
         if len(self.train[0]) != len(self.train[1]):
             print("Captions do not match image features one to one for training set!")
@@ -87,7 +107,18 @@ class Data:
         if len(self.dev[0]) != len(self.dev[1]):
             print("Captions do not match image features one to one for dev set!")
 
+        if len(self.test[0]) != len(self.test[1]):
+            print("Captions do not match image features one to one for test set!")            
+
         return
+
+    # TODO: Write script to load dictionaries in self.index_to_word etc
+    def load_dictionaries(self):
+    	print("loading dictionaries...")
+    	self.word_to_index = pickle.load(open('dict/word_to_index.pkl', 'rb'))
+    	self.index_to_word = pickle.load(open('dict/index_to_word.pkl', 'rb'))
+    	print("done\n")
+    	return
 
     def create_dictionaries(self):
         """
@@ -106,7 +137,15 @@ class Data:
 
         for idx, word in enumerate(words):
             self.word_to_index[word] = idx + 2
-            self.index_to_word[idx+2] = word              
+            self.index_to_word[idx+2] = word
+
+        # Save dictionaries
+        print("saving dictionaries...")
+        with open('dict/word_to_index.pkl', 'wb') as file:
+            pickle.dump(self.word_to_index, file)
+        with open('dict/index_to_word.pkl', 'wb') as file:
+            pickle.dump(self.index_to_word, file)
+        print("dictionaries saved!")
 
         print("dictionary contains", len(self.word_to_index)-2, "words.")        
         return

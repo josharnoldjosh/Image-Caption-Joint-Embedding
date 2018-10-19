@@ -58,19 +58,56 @@ class Model(torch.nn.Module):
 
 		return norm_sentence_embedding
 
+	def average_i2t_and_t2i(self, i2t, t2i):
+		i_r1, i_r5, i_r10, i_medr, t_r1, t_r5, t_r10, t_medr = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
+		for x in i2t:
+			i_r1 += x[0]
+			i_r5 += x[1]
+			i_r10 += x[2]
+			i_medr += x[3]
+
+		for x in t2i:
+			t_r1 += x[0]
+			t_r5 += x[1]
+			t_r10 += x[2]
+			t_medr += x[3]
+
+		i_r1 = i_r1/len(i2t)
+		i_r5 = i_r5/len(i2t)
+		i_r10 = i_r10/len(i2t)
+		i_medr = i_medr/len(i2t)
+
+		t_r1 = t_r1/len(i2t)
+		t_r5 = t_r5/len(i2t)
+		t_r10 = t_r10/len(i2t)
+		t_medr = t_medr/len(i2t)
+
+		print("	* Image to text scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (i_r1, i_r5, i_r10, i_medr))		
+		print("	* Text to image scores: R@1: %.1f, R@5: %.1f, R@10: %.1f, Medr: %.1f" % (t_r1, t_r5, t_r10, t_medr))
+			
+		return
+
 	def evaluate(self, data, verbose=False):
-		print("	* Validating...")			
+		print("	* Validating", end="", flush=True)			
 		data.set_dev_mode(True)
 		score = 0
+		i2t, t2i = [], []
 		for caption, image_feature in data:				
 			x, y = self.forward(caption, image_feature)
-			score_1 = evaluate.image_to_text(x, y, verbose=verbose)
-			score_2 = evaluate.text_to_image(x, y, verbose=verbose)	
-			score += (score_1 + score_2)			
+			score_1, i2t_result = evaluate.image_to_text(x, y, verbose=verbose)
+			score_2, t2i_result = evaluate.text_to_image(x, y, verbose=verbose)	
+			score += (score_1 + score_2)		
+			i2t.append(i2t_result)	
+			t2i.append(t2i_result)
+			print(".", end="", flush=True)		
 		
+		print(" [DONE]", end="", flush=True)
+		print("")
 		data.set_dev_mode(False)
-		print("	* Scored %.2f" % score)		
-		self.save(score)
+		self.average_i2t_and_t2i(i2t, t2i)	
+		if data.test_mode == False:
+			self.save(score)
 		return
 
 	def save(self, score):

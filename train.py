@@ -37,6 +37,6 @@ if __name__ == "__main__":
 
 	# Final evaluation			
 	print("\nFinal evaluation:")
-	model.evaluate(data, verbose=True)
+	model.evaluate(data)
 
 	print("Script done.")
