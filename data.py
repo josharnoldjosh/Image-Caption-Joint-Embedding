@@ -127,8 +127,9 @@ class Data:
         captions = self.train[0] + self.dev[0]
 
         # TODO: Add beginning and end of setence tokens thats not zero
-        self.word_to_index = {'<eos>':0, 'UNK':1}
-        self.index_to_word = {0:'<eos>', 1:'UNK'}
+        self.word_to_index = {'<blank>':0, '<sos>':1, '<eos>':2, '<unk>':3}
+        self.index_to_word = {0:'<blank>', 1:'<sos>', 2:'<eos>', 3:'<unk>'}
+        pad = len(self.word_to_index)
 
         words = set()                
         for idx, caption in enumerate(captions):  
@@ -136,8 +137,8 @@ class Data:
                 words.add(word)                
 
         for idx, word in enumerate(words):
-            self.word_to_index[word] = idx + 2
-            self.index_to_word[idx+2] = word
+            self.word_to_index[word] = idx + pad
+            self.index_to_word[idx+pad] = word
 
         # Save dictionaries
         print("saving dictionaries...")
@@ -157,7 +158,10 @@ class Data:
         # Convert a caption to an array of indexes of words from the dictionary, self.word_to_index  
         sequences = []        
         for idx, caption in enumerate(captions):
-            sequences.append([self.word_to_index[word] if word in self.word_to_index.keys() else 1 for word in caption.split()])                    
+            seq = [self.word_to_index[word] if word in self.word_to_index.keys() else 1 for word in caption.split()]
+            seq.insert(0, self.word_to_index["<sos>"])
+            seq.append(self.word_to_index["<eos>"])
+            sequences.append(seq)                    
 
         sequence_lengths = [len(seq) for seq in sequences] # the lengths of all sequences in an array
         processed_captions = numpy.zeros((max(sequence_lengths)+1, len(sequences))).astype('int64') # create matrix w/ biggest length of sequence by length of all sequences
