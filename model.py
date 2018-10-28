@@ -32,6 +32,9 @@ class Model(torch.nn.Module):
 			self.lstm.cuda()
 			self.linear.cuda()
 
+		if data.test_mode:
+			self.load()
+
 	def forward(self, sentence, image):		
 		return self.forward_caption(sentence), self.forward_image(image)
 
@@ -117,3 +120,7 @@ class Model(torch.nn.Module):
 			torch.save(self.state_dict(), 'best.pkl')
 			print('	* Done!')
 		return
+
+	def load(self, name='best.pkl'):
+		print("loading saved model weights...\n")
+		self.load_state_dict(torch.load(name))

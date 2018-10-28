@@ -76,7 +76,7 @@ class Data:
         """
         Load captions and image features
         """
-        print("loading dataset")        
+        print("loading datasets...")        
 
         loc = path_to_data + name + '/'
 
@@ -117,7 +117,6 @@ class Data:
     	print("loading dictionaries...")
     	self.word_to_index = pickle.load(open('dict/word_to_index.pkl', 'rb'))
     	self.index_to_word = pickle.load(open('dict/index_to_word.pkl', 'rb'))
-    	print("done\n")
     	return
 
     def create_dictionaries(self):
