@@ -5,9 +5,6 @@ def caption(caption):
 	Will some replace characters with no space, and others with a space. Will remove extra spaces and make lower.
 	"""
 
-	# Must decode if reading binary
-	caption = caption.decode('utf-8')
-
 	def replaceText(text, chars, replace):
 		for c in chars:
 			text = text.replace(c, replace)

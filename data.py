@@ -5,7 +5,6 @@ from settings import config
 import torch
 from torch.autograd import Variable
 import pickle
-import clean
 
 class Data:
     def __init__(self, test=False):
@@ -83,15 +82,15 @@ class Data:
 
         # Captions
         train_caps, dev_caps, test_caps = [], [], []
-        with open(loc+name+'_train_caps.txt', 'rb') as f:
-            for line in f:
-                train_caps.append(clean.caption(line.strip()))
+        with open(loc+name+'_train_caps.txt','rb') as f:
+            for line in f:                                
+                train_caps.append(line.strip())
         with open(loc+name+'_dev_caps.txt', 'rb') as f:
             for line in f:
-                dev_caps.append(clean.caption(line.strip()))
+                dev_caps.append(line.strip())
         with open(loc+name+'_test_caps.txt', 'rb') as f:
             for line in f:
-                test_caps.append(clean.caption(line.strip()))
+                test_caps.append(line.strip())
 
         # Image features
         train_ims = numpy.load(loc+name+'_train_ims.npy')
