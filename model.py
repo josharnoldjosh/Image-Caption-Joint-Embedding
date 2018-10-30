@@ -13,6 +13,10 @@ class Model(torch.nn.Module):
 		# Performance score
 		self.score = 0
 
+		# Filename
+		self.input_name = "best"
+		self.output_name = "best"
+
 		# number of words in dictionary
 		num_words = len(data.word_to_index)
 
@@ -33,7 +37,7 @@ class Model(torch.nn.Module):
 			self.linear.cuda()
 
 		if data.test_mode:
-			self.load()
+			self.load()			
 
 	def forward(self, sentence, image):		
 		return self.forward_caption(sentence), self.forward_image(image)
@@ -105,7 +109,7 @@ class Model(torch.nn.Module):
 			t2i.append(t2i_result)
 			print(".", end="", flush=True)		
 		
-		print(" [DONE]", end="", flush=True)
+		print("[DONE]", end="", flush=True)
 		print("")
 		data.set_dev_mode(False)
 		self.average_i2t_and_t2i(i2t, t2i)	
@@ -117,10 +121,11 @@ class Model(torch.nn.Module):
 		if score > self.score:
 			self.score = score
 			print('	* Saving model...')			
-			torch.save(self.state_dict(), 'best.pkl')
+			torch.save(self.state_dict(), self.output_name+'.pkl')
 			print('	* Done!')
 		return
 
-	def load(self, name='best.pkl'):
-		print("loading saved model weights...\n")
-		self.load_state_dict(torch.load(name))
+	def load(self):		
+		self.load_state_dict(torch.load(self.input_name+".pkl"))
+		print("[LOADED]", self.input_name+".pkl", "\n")
+		return

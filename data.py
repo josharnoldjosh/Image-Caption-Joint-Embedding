@@ -5,21 +5,25 @@ from settings import config
 import torch
 from torch.autograd import Variable
 import pickle
+from random import shuffle
 
 class Data:
-    def __init__(self, test=False):
+    def __init__(self, test=False, load_dict=False):
 
         # Load captions as array of strings corresponding to an array of image feature vectors
         self.load_dataset(name=config["dataset"])        
 
         # Get dictionaries              
-        if test:
+        if test or load_dict:
         	self.load_dictionaries()
         else:
         	self.create_dictionaries()
 
         # Reset
         self.reset(test)
+
+        # Shuffle data
+        self.shuffle()
 
     def reset(self, test):
     	# Reset counter & batch size
@@ -43,8 +47,7 @@ class Data:
 
     def __iter__(self):
         return self
-
-    # TODO: Iterate over test set if self.test == TRUE
+    
     def __next__(self):        
         """
         Return a batch of data ready to go into the model
@@ -70,14 +73,11 @@ class Data:
             
         self.batch_number = 0
         raise StopIteration
-
-    # TODO: Load test dataset if test == True
+    
     def load_dataset(self, name='f8k', path_to_data = 'data/', test=False):
         """
         Load captions and image features
-        """
-        print("loading datasets...")        
-
+        """            
         loc = path_to_data + name + '/'
 
         # Captions
@@ -101,6 +101,8 @@ class Data:
         self.dev = (dev_caps, dev_ims)
         self.test = (test_caps, test_ims)
 
+        print("[LOADED]", name, "dataset") 
+
         if len(self.train[0]) != len(self.train[1]):
             print("Captions do not match image features one to one for training set!")
 
@@ -111,13 +113,12 @@ class Data:
             print("Captions do not match image features one to one for test set!")            
 
         return
-
-    # TODO: Write script to load dictionaries in self.index_to_word etc
-    def load_dictionaries(self):
-    	print("loading dictionaries...")
-    	self.word_to_index = pickle.load(open('dict/word_to_index.pkl', 'rb'))
-    	self.index_to_word = pickle.load(open('dict/index_to_word.pkl', 'rb'))
-    	return
+    
+    def load_dictionaries(self):    	
+        self.word_to_index = pickle.load(open('dict/word_to_index.pkl', 'rb'))
+        self.index_to_word = pickle.load(open('dict/index_to_word.pkl', 'rb'))
+        print("[LOADED] dictionaries from dict/") 
+        return
 
     def create_dictionaries(self):
         """
@@ -139,15 +140,15 @@ class Data:
             self.word_to_index[word] = idx + pad
             self.index_to_word[idx+pad] = word
 
-        # Save dictionaries
-        print("saving dictionaries...")
+        # Save dictionaries        
         with open('dict/word_to_index.pkl', 'wb') as file:
             pickle.dump(self.word_to_index, file)
         with open('dict/index_to_word.pkl', 'wb') as file:
             pickle.dump(self.index_to_word, file)
-        print("dictionaries saved!")
 
-        print("dictionary contains", len(self.word_to_index)-2, "words.")        
+        print("[INIT] dictionaries")
+
+        print("[CONTAINS]", len(self.word_to_index)-2, "words")        
         return
 
     def preprocess_data(self, captions, image_features, n_words=10000):
@@ -174,3 +175,15 @@ class Data:
             return Variable(torch.from_numpy(processed_captions)).cuda(), Variable(torch.from_numpy(processed_image_features)).cuda()
         
         return Variable(torch.from_numpy(processed_captions)), Variable(torch.from_numpy(processed_image_features))
+
+    def shuffle(self):
+        def shuffle_data(data):
+            to_shuffle = list(zip(data[0], data[1]))
+            shuffle(to_shuffle)
+            data = list(zip(*to_shuffle))
+            return data
+        self.train = shuffle_data(self.train)
+        self.dev = shuffle_data(self.dev)
+        self.test = shuffle_data(self.test)
+        print("[SHUFFLED] data")
+        return
