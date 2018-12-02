@@ -68,15 +68,13 @@ class Data:
     def k_folds(self, k=5):        
         return KFoldCrossValidation(self.data, k)
 
-    def process(self, train, test, fold):
-    	print("\n[PROCESSING] fold", fold) 
-    	self.train = list(zip(*train))
-    	self.test = list(zip(*test))
-
-    	self.reset()
-    	self.create_dictionaries()
-
-    	return
+    def process(self, train, test, fold, create_dictionaries=True):
+        print("\n[PROCESSING] fold", fold) 
+        self.train = list(zip(*train))
+        self.test = list(zip(*test))
+        self.reset()
+        if create_dictionaries:
+            self.create_dictionaries()
 
     def reset(self):
     	# Reset counter & batch size
