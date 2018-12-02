@@ -9,34 +9,53 @@ if __name__ == "__main__":
 	# Load data
 	data = Data()
 
-	# Load model
-	model = Model(data)
+	# track score to save best model
+	score = 0
 
-	# Model loss function
-	loss = Loss()
+	# Use K fold cross validation for model selection
+	for train, test, fold in data.k_folds(5):		
+
+		# Prepare data to use the current fold
+		data.process(train, test, fold)
+
+		# Load model
+		model = Model(data)
+
+		# Model loss function
+		loss = Loss()
 	
-	# Optimizer 
-	optimizer = Optimizer(model)
-	
-	for epoch in range(config["num_epochs"]):		
-		print("\nStarting epoch", epoch+1)				
-				
-		for caption, image_feature in data:					
+		# Optimizer 
+		optimizer = Optimizer(model)
 
-			# Pass data through model
-			caption, image_feature = model(caption, image_feature)
+		# Begin epochs
+		for epoch in range(config["num_epochs"]):
+			print("[EPOCH]", epoch+1)
 
-			# Compute loss
-			cost = loss(caption, image_feature)			
+			# Process batches
+			for caption, image_feature in data:
+				pass			
 
-			# Zero gradient, Optimize loss, and perform back-propagation
-			optimizer.backprop(cost)
+				# Pass data through model
+				caption, image_feature = model(caption, image_feature)
 
-		# Evaluate results & save best model					
-		model.evaluate(data)
+				# Compute loss
+				cost = loss(caption, image_feature)			
 
-	# Final evaluation			
-	print("\nFinal evaluation:")
-	model.evaluate(data)
+				# Zero gradient, Optimize loss, and perform back-propagation
+				optimizer.backprop(cost)
 
-	print("Script done.")
+			# Evaluate final model results					
+			model.evaluate(data)
+
+		# Final evaluation - save if results are better		
+		print("\nFinal evaluation:")
+		model_score = model.evaluate(data)
+		if model_score > score:
+			score = model_score
+			model.save()
+			data.save_dictionaries()
+			print("[BEST SCORE]", score)
+
+		# TODO - print k-fold validation results, averaged across all models
+
+	print("\n[SCRIPT] complete")

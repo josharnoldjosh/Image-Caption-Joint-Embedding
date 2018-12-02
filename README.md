@@ -8,21 +8,20 @@ Inspired by the paper: https://github.com/linxd5/VSE_Pytorch
 
 ## Getting started
 
-Place your data in the `data/` folder. By default, the repository is setup to use the `f8k` dataset:
-   * `wget http://www.cs.toronto.edu/~rkiros/datasets/f8k.zip`
-   * To use your own data, you must format it like the f8k and change the dataset name in `settings.py`. 
-      * It must follow the same naming convention as `f8k`.
-   * You **must** also create an empty folder called `dict` in the project directory.
-   * Your project directory should look like so:
+Place your data in the `data/` folder. The input format is essentially a file containing captions separated by a new line, and a numpy array that contains the image features. The caption and image features are related by index, e.g, `captions[0]` and `images[0]` would represent a pair.
+
+To find out more about preprocessing your data, please check out this repository: https://github.com/josharnoldjosh/Deep-Fashion-Joint-Embedding-Preprocessing
+
+The repository formats a popular dataset to train as a joint embedding. You can follow the code, it is fairly easy to understand.
+
+Make sure you have an empty folder called `dict`.
   
 ![file](https://i.imgur.com/VvgsZIy.png)
     
 ## Train the model
 
-Run `python3 train.py` to train your model. The best model will be saved automatically as `best.pkl`. Open `settings.py` to edit the configuration of the model and training.
+Run `python3 train.py` to train your model. Run `python3 test.py` to test your model.
 
-## Test the model
+Alot of work has been done behind the scenes. As long as your data is formatted in the right way for inputting into the folder, everything should be good. The only three files you will need to worry about is `train.py`, `test.py`, and `settings.py`. 
 
-Run `python3 test.py`. You must have a test dataset that follows the same input format and naming convention as the f8k otherwise you will get errors.
-
-The test will output the averaged `Recall@K` scores.
+The script has been setup to use k-fold cross validation. Make sure you configure `settings.py`. Everything else should be straight forward.

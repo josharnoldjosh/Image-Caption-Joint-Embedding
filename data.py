@@ -7,43 +7,96 @@ from torch.autograd import Variable
 import pickle
 from random import shuffle
 
+class KFoldCrossValidation:
+    """
+    Handles splitting data into folds and serving each train/test through a generator.
+    """
+
+    def split(self, a, n):
+        k, m = divmod(len(a), n)
+        return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+
+    def __init__(self, data, k):    
+
+    	# set up for iteration    
+        self.k = k
+        self.idx = 0      
+        
+        # zip list and shuffle it
+        d = list(zip(data[0], data[1]))
+        shuffle(d)
+
+        # create split array
+        gen = self.split(d, k)
+        self.splits = []
+        for i in gen:
+        	self.splits.append(i)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):    	
+        if self.idx == self.k:
+            raise StopIteration
+
+        test = self.splits[self.idx]
+        shuffle(test)
+
+        train = []
+        for i, split in enumerate(self.splits):
+        	if i != self.idx:
+        		shuffle(split)
+        		train += split
+
+        shuffle(train)
+
+        self.idx += 1
+
+        return train, test, self.idx
+
 class Data:
-    def __init__(self, test=False, load_dict=False):
+    """
+    Will default to using k_fold cross validation.
+    Set the "self.use_test_set" to process the test set.
+    """
+    def __init__(self):
 
         # Load captions as array of strings corresponding to an array of image feature vectors
-        self.load_dataset(name=config["dataset"])        
+        self.load_dataset(name=config["dataset"])
+        self.reset()
 
-        # Get dictionaries              
-        if test or load_dict:
-        	self.load_dictionaries()
-        else:
-        	self.create_dictionaries()
+    def k_folds(self, k=5):        
+        return KFoldCrossValidation(self.data, k)
 
-        # Reset
-        self.reset(test)
+    def process(self, train, test, fold):
+    	print("\n[PROCESSING] fold", fold) 
+    	self.train = list(zip(*train))
+    	self.test = list(zip(*test))
 
-        # Shuffle data
-        self.shuffle()
+    	self.reset()
+    	self.create_dictionaries()
 
-    def reset(self, test):
+    	return
+
+    def reset(self):
     	# Reset counter & batch size
         self.batch_size = config["batch_size"]        
         self.batch_number = 0
-        self.previous_batch_number = 0
-        self.use_dev = False
-        self.dev_mode = False
-        self.test_mode = test
+        self.previous_batch_number = 0   
+        self.use_test_set = False     
         return
 
-    def set_dev_mode(self, mode):
+    def test_set(self, mode):
+        """
+        Will switch to iterating over the test set or train set.
+        """
         if mode:
-            self.use_dev = True
+            self.use_test_set = True
             self.previous_batch_number = self.batch_number
             self.batch_number = 0
         else:
-            self.batch_number = self.previous_batch_number
-            self.use_dev = False
-        return
+            self.use_test_set = False
+            self.batch_number = self.previous_batch_number        
 
     def __iter__(self):
         return self
@@ -54,9 +107,7 @@ class Data:
         """
 
         data_set = self.train
-        if self.use_dev:
-        	data_set = self.dev
-        if self.test_mode:
+        if self.use_test_set:
         	data_set = self.test      	
 
         # Upper and lower indexes for the batches
@@ -81,36 +132,22 @@ class Data:
         loc = path_to_data + name + '/'
 
         # Captions
-        train_caps, dev_caps, test_caps = [], [], []
-        with open(loc+name+'_train_caps.txt','rb') as f:
+        captions = []
+        with open(loc+name+'_caps.txt','rb') as f:
             for line in f:                                
-                train_caps.append(line.strip())
-        with open(loc+name+'_dev_caps.txt', 'rb') as f:
-            for line in f:
-                dev_caps.append(line.strip())
-        with open(loc+name+'_test_caps.txt', 'rb') as f:
-            for line in f:
-                test_caps.append(line.strip())
+                captions.append(line.strip())
 
         # Image features
-        train_ims = numpy.load(loc+name+'_train_ims.npy')
-        dev_ims = numpy.load(loc+name+'_dev_ims.npy') 
-        test_ims = numpy.load(loc+name+'_test_ims.npy')        
-
-        self.train = (train_caps, train_ims)
-        self.dev = (dev_caps, dev_ims)
-        self.test = (test_caps, test_ims)
+        ims = numpy.load(loc+name+'_ims.npy')
+                
+        self.data = (captions, ims)
+        self.train = self.data
+        self.test = self.data
 
         print("[LOADED]", name, "dataset") 
 
-        if len(self.train[0]) != len(self.train[1]):
-            print("Captions do not match image features one to one for training set!")
-
-        if len(self.dev[0]) != len(self.dev[1]):
-            print("Captions do not match image features one to one for dev set!")
-
-        if len(self.test[0]) != len(self.test[1]):
-            print("Captions do not match image features one to one for test set!")            
+        if len(self.data[0]) != len(self.data[1]):
+            print("Captions do not match image features one to one for dataset!")           
 
         return
     
@@ -120,11 +157,19 @@ class Data:
         print("[LOADED] dictionaries from dict/") 
         return
 
+    def save_dictionaries(self):
+        # Save dictionaries        
+        with open('dict/word_to_index.pkl', 'wb') as file:
+            pickle.dump(self.word_to_index, file)
+        with open('dict/index_to_word.pkl', 'wb') as file:
+            pickle.dump(self.index_to_word, file)
+        return    	
+
     def create_dictionaries(self):
         """
         Create the dictionaries to go from a word to an index and an index to a words.
         """        
-        captions = self.train[0] + self.dev[0]
+        captions = self.train[0]
 
         # TODO: Add beginning and end of setence tokens thats not zero
         self.word_to_index = {'<blank>':0, '<sos>':1, '<eos>':2, '<unk>':3}
@@ -140,14 +185,7 @@ class Data:
             self.word_to_index[word] = idx + pad
             self.index_to_word[idx+pad] = word
 
-        # Save dictionaries        
-        with open('dict/word_to_index.pkl', 'wb') as file:
-            pickle.dump(self.word_to_index, file)
-        with open('dict/index_to_word.pkl', 'wb') as file:
-            pickle.dump(self.index_to_word, file)
-
         print("[INIT] dictionaries")
-
         print("[CONTAINS]", len(self.word_to_index)-2, "words")        
         return
 
@@ -176,14 +214,4 @@ class Data:
         
         return Variable(torch.from_numpy(processed_captions)), Variable(torch.from_numpy(processed_image_features))
 
-    def shuffle(self):
-        def shuffle_data(data):
-            to_shuffle = list(zip(data[0], data[1]))
-            shuffle(to_shuffle)
-            data = list(zip(*to_shuffle))
-            return data
-        self.train = shuffle_data(self.train)
-        self.dev = shuffle_data(self.dev)
-        self.test = shuffle_data(self.test)
-        print("[SHUFFLED] data")
-        return
+

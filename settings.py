@@ -7,6 +7,6 @@ config = {
 	"learning_rate":0.01,
 	"display_freq":50, # how often to display loss : 1 = every batch, 2 = every second batch etc...
 	"margin_pairwise_ranking_loss":0.2, # Should be between zero and 1,
-	"dataset":"fashion_dialog", # deepfashion, fashion_dialog
+	"dataset":"deepfashion", 
 	"cuda":True # enable cuda
 }

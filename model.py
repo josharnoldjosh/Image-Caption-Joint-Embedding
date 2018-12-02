@@ -34,10 +34,7 @@ class Model(torch.nn.Module):
 		if torch.cuda.is_available() and config["cuda"] == True:
 			self.embedding.cuda()
 			self.lstm.cuda()
-			self.linear.cuda()
-
-		if data.test_mode:
-			self.load()			
+			self.linear.cuda()		
 
 	def forward(self, sentence, image):		
 		return self.forward_caption(sentence), self.forward_image(image)
@@ -96,8 +93,16 @@ class Model(torch.nn.Module):
 		return
 
 	def evaluate(self, data, verbose=False):
-		print("	* Validating", end="", flush=True)			
-		data.set_dev_mode(True)
+		"""
+		If using k-fold cross validation in the data module,
+		the data class will handle updaing the self.train and self.test
+		datasets. Thus the data.test_set(True) becomes very important.
+		However, a raw intialization of the dataclass with result in
+		the loaded data being assigned to both test and train, so we can
+		evaluate the results. 
+		"""
+		print("	* Validating", end="", flush=True)				
+		data.test_set(True) # very important | swaps to iterating over the test set for validation
 		score = 0
 		i2t, t2i = [], []
 		for caption, image_feature in data:				
@@ -111,18 +116,14 @@ class Model(torch.nn.Module):
 		
 		print("[DONE]", end="", flush=True)
 		print("")
-		data.set_dev_mode(False)
-		self.average_i2t_and_t2i(i2t, t2i)	
-		if data.test_mode == False:
-			self.save(score)
-		return
+		data.test_set(False) # also very important | swaps BACK to using the TRAIN set
+		self.average_i2t_and_t2i(i2t, t2i)
+		return score	
 
-	def save(self, score):
-		if score > self.score:
-			self.score = score
-			print('	* Saving model...')			
-			torch.save(self.state_dict(), self.output_name+'.pkl')
-			print('	* Done!')
+	def save(self):
+		print('	* Saving model...')			
+		torch.save(self.state_dict(), self.output_name+'.pkl')
+		print('	* Done!')
 		return
 
 	def load(self):		
