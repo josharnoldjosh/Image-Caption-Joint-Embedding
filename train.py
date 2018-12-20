@@ -7,55 +7,39 @@ from optimizer import Optimizer
 if __name__ == "__main__":
 
 	# Load data
-	data = Data()
+	data = Data(create_dict=True)
 
-	# track score to save best model
-	score = 0
+	# Load model
+	model = Model(data)
 
-	# Use K fold cross validation for model selection
-	for train, test, fold in data.k_folds(5):		
+	# Model loss function
+	loss = Loss()
 
-		# Prepare data to use the current fold
-		data.process(train, test, fold)
+	# Optimizer 
+	optimizer = Optimizer(model)
 
-		# Load model
-		model = Model(data)
+	# Begin epochs
+	for epoch in range(config["num_epochs"]):
+		print("[EPOCH]", epoch+1)
 
-		# Model loss function
-		loss = Loss()
+		# Process batches
+		for caption, image_feature in data:
+			pass			
+
+			# Pass data through model
+			caption, image_feature = model(caption, image_feature)
+
+			# Compute loss
+			cost = loss(caption, image_feature)			
+
+			# Zero gradient, Optimize loss, and perform back-propagation
+			optimizer.backprop(cost)
+
+		# Evaluate final model results | save model if better				
+		model.evaluate(data, save_if_better=True)
+
+	# Final evaluation - save if results are better		
+	print("\nFinal evaluation:")
+	model.evaluate(data, save_if_better=True)
 	
-		# Optimizer 
-		optimizer = Optimizer(model)
-
-		# Begin epochs
-		for epoch in range(config["num_epochs"]):
-			print("[EPOCH]", epoch+1)
-
-			# Process batches
-			for caption, image_feature in data:
-				pass			
-
-				# Pass data through model
-				caption, image_feature = model(caption, image_feature)
-
-				# Compute loss
-				cost = loss(caption, image_feature)			
-
-				# Zero gradient, Optimize loss, and perform back-propagation
-				optimizer.backprop(cost)
-
-			# Evaluate final model results					
-			model.evaluate(data)
-
-		# Final evaluation - save if results are better		
-		print("\nFinal evaluation:")
-		model_score = model.evaluate(data)
-		if model_score > score:
-			score = model_score
-			model.save()
-			data.save_dictionaries()
-			print("[BEST SCORE]", score)
-
-		# TODO - print k-fold validation results, averaged across all models
-
 	print("\n[SCRIPT] complete")

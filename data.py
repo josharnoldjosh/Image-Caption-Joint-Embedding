@@ -59,11 +59,14 @@ class Data:
     Will default to using k_fold cross validation.
     Set the "self.use_test_set" to process the test set.
     """
-    def __init__(self):
+    def __init__(self, create_dict=False):
 
         # Load captions as array of strings corresponding to an array of image feature vectors
         self.load_dataset(name=config["dataset"])
         self.reset()
+
+        if create_dict:
+        	self.create_dictionaries()
 
     def k_folds(self, k=5):        
         return KFoldCrossValidation(self.data, k)

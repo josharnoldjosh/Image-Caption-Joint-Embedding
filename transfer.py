@@ -9,56 +9,41 @@ if __name__ == "__main__":
 	# Load data
 	data = Data()
 	data.load_dictionaries()
-
-	# track score to save best model
-	score = 0
-
-	# Use K fold cross validation for model selection
-	for train, test, fold in data.k_folds(5):		
-
-		# Prepare data to use the current fold
-		data.process(train, test, fold, create_dictionaries=False)
-
-		# Load model
-		model = Model(data)
-		model.input_name = "best"
-		model.output_name = "final"
-		model.load()
-
-		# Model loss function
-		loss = Loss()
 	
-		# Optimizer 
-		optimizer = Optimizer(model)
+	# Load model
+	model = Model(data)
+	model.input_name = "best"
+	model.output_name = "final"
+	model.load()
 
-		# Begin epochs
-		for epoch in range(config["num_epochs"]):
-			print("[EPOCH]", epoch+1)
+	# Model loss function
+	loss = Loss()
 
-			# Process batches
-			for caption, image_feature in data:
-				pass			
+	# Optimizer 
+	optimizer = Optimizer(model)
 
-				# Pass data through model
-				caption, image_feature = model(caption, image_feature)
+	# Begin epochs
+	for epoch in range(config["num_epochs"]):
+		print("[EPOCH]", epoch+1)
 
-				# Compute loss
-				cost = loss(caption, image_feature)			
+		# Process batches
+		for caption, image_feature in data:
+			pass			
 
-				# Zero gradient, Optimize loss, and perform back-propagation
-				optimizer.backprop(cost)
+			# Pass data through model
+			caption, image_feature = model(caption, image_feature)
 
-			# Evaluate final model results					
-			model.evaluate(data)
+			# Compute loss
+			cost = loss(caption, image_feature)			
 
-		# Final evaluation - save if results are better		
-		print("\nFinal evaluation:")
-		model_score = model.evaluate(data)
-		if model_score > score:
-			score = model_score
-			model.save()			
-			print("[BEST SCORE]", score)
+			# Zero gradient, Optimize loss, and perform back-propagation
+			optimizer.backprop(cost)
 
-		# TODO - print k-fold validation results, averaged across all models
+		# Evaluate final model results					
+		model.evaluate(data, save_if_better=True)
 
+	# Final evaluation	
+	print("\nFinal evaluation:")
+	model.evaluate(data, save_if_better=True)		
+	
 	print("\n[SCRIPT] complete")

@@ -12,6 +12,7 @@ class Model(torch.nn.Module):
 
 		# Performance score
 		self.score = 0
+		self.best_score = 0
 
 		# Filename
 		self.input_name = "best"
@@ -92,7 +93,7 @@ class Model(torch.nn.Module):
 			
 		return
 
-	def evaluate(self, data, verbose=False):
+	def evaluate(self, data, verbose=False, save_if_better=False):
 		"""
 		If using k-fold cross validation in the data module,
 		the data class will handle updaing the self.train and self.test
@@ -118,6 +119,12 @@ class Model(torch.nn.Module):
 		print("")
 		data.test_set(False) # also very important | swaps BACK to using the TRAIN set
 		self.average_i2t_and_t2i(i2t, t2i)
+
+		if save_if_better and score > self.best_score:
+			self.save()
+			data.save_dictionaries()
+			self.best_score = score
+
 		return score	
 
 	def save(self):
