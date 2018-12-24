@@ -23,19 +23,18 @@ if __name__ == "__main__":
 		print("[EPOCH]", epoch+1)
 
 		# Process batches
-		for caption, image_feature in data:
-			pass			
+		for dialog, image_feature in data:
 
 			# Pass data through model
-			caption, image_feature = model(caption, image_feature)
-
+			caption, image_feature = model(dialog, image_feature)
+		
 			# Compute loss
 			cost = loss(caption, image_feature)			
 
 			# Zero gradient, Optimize loss, and perform back-propagation
 			optimizer.backprop(cost)
 
-		# Evaluate final model results | save model if better				
+		#Evaluate final model results | save model if better				
 		model.evaluate(data, save_if_better=True)
 
 	# Final evaluation - save if results are better		

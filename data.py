@@ -6,6 +6,7 @@ import torch
 from torch.autograd import Variable
 import pickle
 from random import shuffle
+import deepdish as dd
 
 class KFoldCrossValidation:
     """
@@ -132,11 +133,9 @@ class Data:
         """            
         loc = path_to_data + name + '/'
 
-        # Captions
-        captions = []
-        with open(loc+name+'_caps.txt','rb') as f:
-            for line in f:                                
-                captions.append(line.strip())
+        # Captions        
+        cap_file_name = loc+name+'_caps.h5'
+        captions = dd.io.load(cap_file_name)                
 
         # Image features
         ims = numpy.load(loc+name+'_ims.npy')
@@ -178,7 +177,7 @@ class Data:
         pad = len(self.word_to_index)
 
         words = set()                
-        for idx, caption in enumerate(captions):  
+        for idx, caption in enumerate([item for caption_set in captions for item in caption_set]):  
             for word in caption.split():  
                 words.add(word)                
 
@@ -194,18 +193,38 @@ class Data:
         """
         Convert raw data to go into the model.
         """               
-        # Convert a caption to an array of indexes of words from the dictionary, self.word_to_index  
-        sequences = []        
-        for idx, caption in enumerate(captions):
-            seq = [self.word_to_index[word] if word in self.word_to_index.keys() else 1 for word in caption.split()]
+        def get_seq(caption): 
+            seq = [self.word_to_index[word] if word in self.word_to_index.keys() else 1 for word in caption.split()]       	
             seq.insert(0, self.word_to_index["<sos>"])
             seq.append(self.word_to_index["<eos>"])
-            sequences.append(seq)                    
 
-        sequence_lengths = [len(seq) for seq in sequences] # the lengths of all sequences in an array
-        processed_captions = numpy.zeros((max(sequence_lengths)+1, len(sequences))).astype('int64') # create matrix w/ biggest length of sequence by length of all sequences
-        for idx, seq in enumerate(sequences):
-            processed_captions[:sequence_lengths[idx], idx] = seq # populate matrix with sequences
+            if len(seq) > config["max_word_emb"]:
+                print("Warning: max_word_emb size exceeded. Check your settings.")
+                         
+            return seq
+
+        # Convert a caption to an array of indexes of words from the dictionary, self.word_to_index  
+        sequences = []               
+        for idx, caption in enumerate(captions):
+            sequences.append([get_seq(i) for i in caption])         
+
+
+        # Create a 3D matrix
+        x = len(sequences)
+        y = max([len(i) for i in sequences])
+        z = max([len(j) for i in sequences for j in i])
+        z = config["max_word_emb"]
+
+        processed_captions = numpy.zeros((x, y, z)).astype('int64')
+
+        # for an array of seqs
+        for idx, seq in enumerate(sequences):        	
+            # for a seq array
+            for jdx, item in enumerate(seq):
+                # for each element in the seq array
+                for kdx, element in enumerate(item):
+                    # set value in matrix
+                    processed_captions[idx][jdx][kdx] = element
 
         # Just convert image features to numpy array
         processed_image_features = numpy.asarray(image_features, dtype=numpy.float32)

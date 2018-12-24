@@ -23,7 +23,8 @@ class Model(torch.nn.Module):
 
 		# Sentence
 		self.embedding = torch.nn.Embedding(num_words, config['word_dimension'])
-		self.lstm = torch.nn.LSTM(config['word_dimension'], config['model_dimension'], 1)
+		self.lstm = torch.nn.LSTM(config['word_dimension'], config['dialog_emb'], 1)
+		self.linear_caption = torch.nn.Linear(config['dialog_emb']*config['max_word_emb'], config["model_dimension"])
 
 		# Image - Assume image feature is already extracted from pre-trained CNN
 		self.linear = torch.nn.Linear(config['image_dimension'], config['model_dimension'])
@@ -35,9 +36,10 @@ class Model(torch.nn.Module):
 		if torch.cuda.is_available() and config["cuda"] == True:
 			self.embedding.cuda()
 			self.lstm.cuda()
-			self.linear.cuda()		
+			self.linear.cuda()
+			self.linear_caption.cuda()
 
-	def forward(self, sentence, image):		
+	def forward(self, sentence, image):										
 		return self.forward_caption(sentence), self.forward_image(image)
 
 	def forward_image(self, image):
@@ -50,18 +52,22 @@ class Model(torch.nn.Module):
 		return norm_image_embedding
 
 	def forward_caption(self, sentence):
+		def rnn(sentence):		
+			sentence_embedding = self.embedding(sentence)
+			_, (sentence_embedding, _) = self.lstm(sentence_embedding)
+			x_sentence_embedding = sentence_embedding.squeeze(0)						
+			return x_sentence_embedding
 
-		# Pass caption through model
-		sentence_embedding = self.embedding(sentence)
-
-		_, (sentence_embedding, _) = self.lstm(sentence_embedding)
-
-		x_sentence_embedding = sentence_embedding.squeeze(0)
-
-		# Normalize vectors
-		norm_sentence_embedding = F.normalize(x_sentence_embedding, p=2, dim=1)		
-
-		return norm_sentence_embedding
+		# process sentences 
+		result = []
+		for i in sentence:
+			forward = rnn(i) # batch process dialog: [turn1, turn2, ...]					
+			forward = forward.view(forward.numel()) # flatten processed captions so its just [x, y, z, ...]
+			forward = self.linear_caption(forward) # pass flattened array through MLP			
+			result += [forward]		
+		result = torch.stack(result) # stack list of tensors into a tensor of tensors 		
+		result = F.normalize(result, p=2, dim=1) # normalize result
+		return result
 
 	def average_i2t_and_t2i(self, i2t, t2i):
 		i_r1, i_r5, i_r10, i_medr, t_r1, t_r5, t_r10, t_medr = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
@@ -105,7 +111,7 @@ class Model(torch.nn.Module):
 		print("	* Validating", end="", flush=True)				
 		data.test_set(True) # very important | swaps to iterating over the test set for validation
 		score = 0
-		i2t, t2i = [], []
+		i2t, t2i = [], []		
 		for caption, image_feature in data:				
 			x, y = self.forward(caption, image_feature)
 			score_1, i2t_result = evaluate.image_to_text(x, y, verbose=verbose)
