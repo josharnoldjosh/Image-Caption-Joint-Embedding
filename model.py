@@ -23,8 +23,8 @@ class Model(torch.nn.Module):
 
 		# Sentence
 		self.embedding = torch.nn.Embedding(num_words, config['word_dimension'])
-		self.lstm = torch.nn.LSTM(config['word_dimension'], config['dialog_emb'], 1)
-		self.linear_caption = torch.nn.Linear(config['dialog_emb']*config['max_word_emb'], config["model_dimension"])
+		self.lstm = torch.nn.LSTM(config['word_dimension'], config['dialog_emb'], 1, batch_first=True)
+		self.linear_caption = torch.nn.Linear(config['dialog_emb'], config["model_dimension"])
 
 		# Image - Assume image feature is already extracted from pre-trained CNN
 		self.linear = torch.nn.Linear(config['image_dimension'], config['model_dimension'])
@@ -51,23 +51,13 @@ class Model(torch.nn.Module):
 
 		return norm_image_embedding
 
-	def forward_caption(self, sentence):
-		def rnn(sentence):		
-			sentence_embedding = self.embedding(sentence)
-			_, (sentence_embedding, _) = self.lstm(sentence_embedding)
-			x_sentence_embedding = sentence_embedding.squeeze(0)						
-			return x_sentence_embedding
-
-		# process sentences 
-		result = []
-		for i in sentence:
-			forward = rnn(i) # batch process dialog: [turn1, turn2, ...]					
-			forward = forward.view(forward.numel()) # flatten processed captions so its just [x, y, z, ...]
-			forward = self.linear_caption(forward) # pass flattened array through MLP			
-			result += [forward]		
-		result = torch.stack(result) # stack list of tensors into a tensor of tensors 		
-		result = F.normalize(result, p=2, dim=1) # normalize result
-		return result
+	def forward_caption(self, sentence):				
+		#sentence_embedding = self.embedding(sentence)
+		sentence_embedding = sentence.float()
+		_, (sentence_embedding, _) = self.lstm(sentence_embedding)
+		x_sentence_embedding = sentence_embedding.squeeze(0)
+		x_sentence_embedding = self.linear_caption(x_sentence_embedding)		
+		return x_sentence_embedding
 
 	def average_i2t_and_t2i(self, i2t, t2i):
 		i_r1, i_r5, i_r10, i_medr, t_r1, t_r5, t_r10, t_medr = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0

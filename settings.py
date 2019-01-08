@@ -1,10 +1,10 @@
 config = {
-	"num_epochs":12,
+	"num_epochs":300,
 	"batch_size":64,
 	"word_dimension":1000, # The dimensionality of word embeddings
 	"image_dimension":512, # input image dimension : 4096 for VGG, 512 resnet
 	"model_dimension":1000, # The dimension of the embedding space,
-	"max_word_emb":100, # the max sequence size
+	"max_word_emb":1000, # the max sequence size
 	"dialog_emb":128,
 	"learning_rate":0.01,
 	"display_freq":4, # how often to display loss : 1 = every batch, 2 = every second batch etc...

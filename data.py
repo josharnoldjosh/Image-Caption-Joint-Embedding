@@ -227,7 +227,7 @@ class Data:
                     processed_captions[idx][jdx][kdx] = element
 
         # Just convert image features to numpy array
-        processed_image_features = numpy.asarray(image_features, dtype=numpy.float32)
+        processed_image_features = numpy.asarray(image_features, dtype=numpy.float32)        
 
         if torch.cuda.is_available() and config["cuda"] == True:
             return Variable(torch.from_numpy(processed_captions)).cuda(), Variable(torch.from_numpy(processed_image_features)).cuda()
