@@ -23,8 +23,8 @@ class Model(torch.nn.Module):
 
 		# Sentence
 		self.embedding = torch.nn.Embedding(num_words, config['word_dimension'])
-		self.lstm = torch.nn.LSTM(config['word_dimension'], config['dialog_emb'], 1, batch_first=True)
-		self.linear_caption = torch.nn.Linear(config['dialog_emb'], config["model_dimension"])
+		self.lstm = torch.nn.LSTM(config['word_dimension'], config['lstm_dialog_emb'], 1, batch_first=True)
+		self.linear_caption = torch.nn.Linear(config['lstm_dialog_emb'], config["model_dimension"])
 
 		# Image - Assume image feature is already extracted from pre-trained CNN
 		self.linear = torch.nn.Linear(config['image_dimension'], config['model_dimension'])

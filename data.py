@@ -198,8 +198,8 @@ class Data:
             seq.insert(0, self.word_to_index["<sos>"])
             seq.append(self.word_to_index["<eos>"])
 
-            if len(seq) > config["max_word_emb"]:
-                print("Warning: max_word_emb size exceeded. Check your settings.")
+            if len(seq) > config["word_dimension"]:
+                print("Warning: word_dimension size exceeded. Check your settings.")
                          
             return seq
 
@@ -213,7 +213,7 @@ class Data:
         x = len(sequences)
         y = max([len(i) for i in sequences])
         z = max([len(j) for i in sequences for j in i])
-        z = config["max_word_emb"]
+        z = config["word_dimension"]
 
         processed_captions = numpy.zeros((x, y, z)).astype('int64')
 
